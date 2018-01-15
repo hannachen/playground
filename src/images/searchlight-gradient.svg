@@ -1,0 +1,15 @@
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY st0 "fill:url(#SVGID_1_);">
+	<!ENTITY st1 "display:inline;">
+	<!ENTITY st2 "display:none;">
+]>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="186.5px"
+	 height="406.98px" viewBox="0 0 186.5 406.98" style="enable-background:new 0 0 186.5 406.98;" xml:space="preserve">
+<g id="Layer_1">
+    <linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="92.7866" y1="401.1152" x2="101.3165" y2="47.724">
+        <stop  offset="1.193042e-03" style="stop-color:#FFFFFF;stop-opacity:0"/>
+        <stop  offset="1" style="stop-color:#FFFFFF"/>
+    </linearGradient>
+    <path style="&st0;" d="M186.5,381.39c0,0-38.37,25.58-101.55,25.58S0,382.51,0,382.51L82.62,0h42.64L186.5,381.39z"/>
+</g>
+</svg>

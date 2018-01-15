@@ -6,11 +6,22 @@
   <title>Hanna's Experiments</title>
 </head>
 <body>
-  <div id="debug">
+  <aside id="debug">
     <div id="doeSupported"></div>
     <div id="value"></div>
-  </div>
+    <form id="debug-form">
+      <select id="structure"></select>
+      <textarea id="debug-data"></textarea>
+      <button id="random">Generate <em>Random Numbers</em></button>
+      <button type="submit">Visualize</button>
+    </form>
+    <div id="debug-console">
+      <div class="label">Console:</div>
+      <div id="console"></div>
+    </div>
+  </aside>
   <div id="canvas">
+    <ul id="debug-buttons"></ul>
     <canvas id="app" resize></canvas>
   </div>
 </body>
