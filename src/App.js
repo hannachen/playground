@@ -1,77 +1,19 @@
 import Paper from 'paper'
 import { isEmpty } from 'lodash'
 import tinycolor from 'tinycolor2'
-import Stack from './utils/Stack'
+import rightArrow from 'svg-icon/dist/svg/ionic/arrow-right-c.svg'
+import TypeSelect from './TypeSelect'
+import structureTypes from './structureTypes'
 import Queue from './utils/Queue'
+import Stack from './utils/Stack'
 import LinkedList from './utils/LinkedList'
+import BinarySearchTree from './utils/BinarySearchTree'
 import './scss/app.scss'
 
 class App {
   arraySize = 14
   boxSize = 35
-  dataType = null
-  types = {
-    stack: {
-      label: 'Stack',
-      className: Stack,
-      actions: [
-        'push',
-        'pop',
-        'peek',
-        'isEmpty',
-        'size',
-        'clear',
-        'print',
-        'toString'
-      ]
-    },
-    queue: {
-      label: 'Queue',
-      className: Queue,
-      actions: [
-        'enqueue',
-        'dequeue',
-        'front',
-        'isEmpty',
-        'size',
-        'clear',
-        'print',
-        'toString'
-      ]
-    },
-    linkedList: {
-      label: 'Linked List',
-      className: LinkedList,
-      actions: [
-        'append',
-        'insert',
-        'removeAt',
-        'remove',
-        'indexOf',
-        'isEmpty',
-        'size',
-        'getHead',
-        'toString',
-        'print'
-      ]
-    },
-    dblLinkList: {
-      label: 'Doubly Linked List',
-      actions: []
-    },
-    set: {
-      label: 'Sets',
-      actions: []
-    },
-    dictionary: {
-      label: 'Dictionary',
-      actions: []
-    },
-    tree: {
-      label: 'Tree',
-      actions: []
-    },
-  }
+  arrowSvg = null
 
   constructor() {
     this.initVariables()
@@ -87,36 +29,42 @@ class App {
     this.debugConsole = document.getElementById('console')
     this.valueInput = document.getElementById('debug-data')
     this.offset = (this.canvas.getBoundingClientRect().height - (this.arraySize * this.boxSize)) / 2
-    this.select = document.getElementById('structure')
+    this.select = new TypeSelect()
+    this.data = new structureTypes[this.select.getSelected()]['className']
   }
 
   initEvents() {
     this.randomBtn.addEventListener('click', this.onRandomBtnClick)
     this.debugForm.addEventListener('submit', this.onSubmitDebug)
     this.debugForm.addEventListener('debug', this.updateDebugInput)
-    this.select.addEventListener('change', this.onSelectChange)
+    this.select.on('change', this.onSelectChange)
   }
 
   init() {
-
-    Object.keys(this.types).forEach((option) => {
-      const optionElement = document.createElement('option')
-      optionElement.value = option
-      optionElement.innerHTML = this.types[option]['label']
-      this.select.appendChild(optionElement)
-    })
-
-    this.setDataType(this.select.value)
-
     Paper.setup(this.canvas)
 
+    // Load svg
+    Paper.project.importSVG(rightArrow, {
+      expandShapes: false,
+      onLoad: this.onSvgLoaded
+    })
+
     this.canvasLayer = new Paper.Layer()
-    this.drawActionButtons()
+    this.topLayer = new Paper.Layer()
+    this.topLayer.bringToFront()
+
+    this.drawActionButtons(structureTypes[this.select.getSelected()])
   }
 
-  drawActionButtons = () => {
+  onSvgLoaded = (svg) => {
+    const path = svg.children && svg.children.path ? svg.children.path : svg
+    path.fillColor = 'white'
+    this.arrowSvg = new Paper.SymbolDefinition(path)
+  }
+
+  drawActionButtons = (selected = {}) => {
     this.clearButtons()
-    const actions = this.types[this.select.value]['actions']
+    const actions = selected.actions || []
     actions.forEach(this.createButton)
   }
 
@@ -135,7 +83,7 @@ class App {
     buttonContainer.appendChild(button)
 
     // parse method for more details...
-    const testType = new this.types[this.select.value]['className']()
+    const testType = new structureTypes[this.select.getSelected()]['className']
     const parameters = testType[text].length
 
     if (parameters > 0) {
@@ -157,29 +105,11 @@ class App {
     }
 
     this.debugButtonsContainer.appendChild(buttonContainer)
+  }
 
-    /*
-    const newPos = index * 50
-    const offset = 10
-    const rectangle = new Paper.Rectangle(new Paper.Point(25, newPos + offset), new Paper.Point(125, newPos + 50))
-    const cornerSize = new Paper.Size(4, 4)
-    const path = new Paper.Path.RoundRectangle(rectangle, cornerSize)
-    path.fillColor = new Paper.Color(.1, .35, .27)
-
-    // text
-    const btnText = new Paper.PointText(path.position.x, path.position.y)
-    btnText.fillColor = 'white'
-    btnText.content = text
-
-    // Reposition text
-    btnText.position = new Paper.Point(btnText.position.x - (btnText.bounds.width/2), path.position.y)
-
-    const button = new Paper.Group([path, btnText])
-    button.data.action = text
-    button.onClick = this.onBtnClick
-
-    this.actionsLayer.addChild(button)
-*/
+  drawStack = () => {
+    const boxes = !isEmpty(this.data.toString()) ? this.data.toString().split(',') : []
+    boxes.forEach(this.createBox)
   }
 
   createBox = (value, index) => {
@@ -204,60 +134,183 @@ class App {
     this.canvasLayer.addChild(group)
   }
 
-  createNode = (value, index) => {
+  drawList = (node = null, index = 0) => {
+    const current = node || this.data.getHead()
+
+    this.createNode(current, index)
+
+    if (current.next) {
+      this.drawList(current.next, index + 1)
+    }
+  }
+
+  createNode = (node, index) => {
     const { boxSize } = this
     const canvasCenterH = this.canvas.getBoundingClientRect().width / 2
     const verticalPos = (index * boxSize) + this.offset
-    const rectangleSize = new Paper.Size(boxSize * 2, boxSize)
+    const group = new Paper.Group()
 
-    // current
+    // index box
+    const indexBoxSize = new Paper.Size(boxSize)
+    const indexBox = new Paper.Path.Rectangle(
+      new Paper.Point(canvasCenterH - boxSize, verticalPos), indexBoxSize
+    )
+    indexBox.strokeColor = 'white'
+    group.addChild(indexBox)
+
+    // index text
+    const indexBoxPosition = [indexBox.position.x, indexBox.position.y]
+    const indexText = new Paper.PointText(indexBoxPosition)
+    indexText.fillColor = 'white'
+    indexText.content = `${index}`
+    indexText.position = new Paper.Point(indexBoxPosition)
+    group.addChild(indexText)
+
+    // current box
+    const rectangleSize = new Paper.Size(boxSize * 2, boxSize)
     const element = new Paper.Path.Rectangle(
       new Paper.Point(canvasCenterH, verticalPos), rectangleSize
     )
-    element.fillColor = new Paper.Color(.26, value/255, .95)
+    element.fillColor = new Paper.Color(.26, node.element/255, .95)
+    group.addChild(element)
 
     // current text
-    const text = new Paper.PointText(element.position.x, element.position.y)
+    const elementCenter = [element.position.x, element.position.y]
+    const text = new Paper.PointText(elementCenter)
     text.fillColor = 'white'
     text.fontWeight = 800
-    text.content = `${value}`
+    text.content = `${node.element}`
+    text.position = new Paper.Point(elementCenter)
+    group.addChild(text)
 
     // next
-    const next = new Paper.Path.Rectangle(
-      new Paper.Point(canvasCenterH + (boxSize * 2), verticalPos), rectangleSize
-    )
-    next.fillColor = new Paper.Color(.95, value/255, .95)
+    if (node.next) {
+      const next = new Paper.Path.Rectangle(
+        new Paper.Point(canvasCenterH + (boxSize * 2), verticalPos), rectangleSize
+      )
+      next.fillColor = new Paper.Color(.95, (node.next.element || 0)/255, .95)
+      group.addChild(next)
 
-    // next text
-    const nextText = new Paper.PointText(next.position.x, next.position.y)
-    nextText.fillColor = 'white'
-    nextText.fontWeight = 800
-    nextText.content = `${value}`
+      // next text
+      const nextCenter = [next.position.x, next.position.y]
+      const nextText = new Paper.PointText(nextCenter)
+      nextText.fillColor = 'white'
+      nextText.fontWeight = 800
+      nextText.content = `${node.next.element}`
+      nextText.position = new Paper.Point(nextCenter)
+      group.addChild(nextText)
+    }
+
+    this.canvasLayer.addChild(group)
+
+    // draw link
+    const arrow = this.arrowSvg.place()
+    arrow.position = new Paper.Point(canvasCenterH + (boxSize * 3) + 3, element.position.y)
+    arrow.opacity = node.next ? 1 : 0
+    arrow.scale(0.06)
+
+    const arrowBox = new Paper.Path.Rectangle(
+      new Paper.Point(canvasCenterH, verticalPos),
+      new Paper.Size(boxSize * 5, boxSize)
+    )
+    arrowBox.strokeColor = 'white'
+
+    const arrowGroup = new Paper.Group([arrow, arrowBox])
+    this.topLayer.addChild(arrowGroup)
   }
 
-  drawBoxes = () => {
-    this.canvasLayer.removeChildren()
-    const boxes = !isEmpty(this.data.toString()) ? this.data.toString().split(',') : []
-    boxes.forEach(this.getCallback())
+  drawTree = () => {
+
+    this.createBranch({
+      node: this.data.getRoot(),
+      maxDepth: this.data.getDepth()
+    })
+  }
+
+  createBranch = ({ node, position = null, level = 1, maxDepth = 1 }) => {
+    const canvasCenterH = this.canvas.getBoundingClientRect().width / 2
+    const verticalPos = this.boxSize + this.offset
+    const nodeCenter = position || new Paper.Point(canvasCenterH, verticalPos)
+
+    // draw circle
+    if (node) {
+
+      const nodeCircle = new Paper.Path.Circle(nodeCenter, this.boxSize/2)
+      nodeCircle.fillColor = 'black'
+      nodeCircle.strokeColor = 'white'
+
+      const text = new Paper.PointText(nodeCenter)
+      text.fillColor = 'white'
+      text.fontWeight = 800
+      text.content = `${node.key}`
+      text.position = new Paper.Point(nodeCenter)
+    }
+    if (node.left || node.right) {
+      level++
+    }
+    if (node.left) {
+      // draw line to bottom left
+      const leftLineTerminal = this.calculateLineEndPosition({ from: nodeCenter, level, maxDepth })
+      const leftLine = new Paper.Path.Line(nodeCenter, leftLineTerminal)
+      leftLine.strokeColor = 'white'
+      leftLine.sendToBack()
+
+      // get line end position
+      this.createBranch({ node: node.left, position: leftLineTerminal, level, maxDepth })
+    }
+    if (node.right) {
+      // draw line to bottom right
+      const rightLineTerminal = this.calculateLineEndPosition({ from: nodeCenter, direction: 'right', level, maxDepth })
+      const rightLine = new Paper.Path.Line(nodeCenter, rightLineTerminal)
+      rightLine.strokeColor = 'white'
+      rightLine.sendToBack()
+
+      // get line end position
+      this.createBranch({ node: node.right, position: rightLineTerminal, level, maxDepth })
+    }
+  }
+
+  calculateLineEndPosition = ({ from, direction = 'left', length = 50, level = 1, maxDepth = 1 }) => {
+    const diff = maxDepth - level
+    const ratio = level / maxDepth
+    const amount =  25 + ((20 * ratio) * diff)
+    const offset = direction === 'left' ? ~amount + 1 : amount
+    const angle = 90 + offset
+    const x = Math.cos(angle*Math.PI/180) * length + from.x
+    const y = Math.sin(angle*Math.PI/180) * length + from.y
+
+    return new Paper.Point(x, y)
+  }
+
+  visualize = () => {
+    this.clearCanvas()
+    this.getCallBack().call()
     this.centerContent()
   }
 
-  getCallback = () => {
+  getTargetValues = (target) => {
+    let args = []
+    const inputs = Array.from(target.closest('li').querySelectorAll('input'))
+    inputs.forEach((input) => {
+      args.push(input.value || this.randomNumber())
+    })
+    return args.join(',')
+  }
+
+  getCallBack = () => {
     const { data } = this
     switch (true) {
+      case data instanceof BinarySearchTree:
+        return this.drawTree
+        break
       case data instanceof LinkedList:
-        return this.createNode
+        return this.drawList
         break
       case data instanceof Stack:
       case data instanceof Queue:
       default:
-        return this.createBox
+        return this.drawStack
     }
-  }
-
-  setDataType = (selectValue = null) => {
-    this.dataType = this.types[selectValue || this.select.value]
-    this.data = new this.dataType.className()
   }
 
   updateDebugInput = (e) => {
@@ -274,10 +327,12 @@ class App {
    * Re-center content
    */
   centerContent = () => {
-    this.canvasLayer.position = new Paper.Point(
+    const center = new Paper.Point(
       this.canvas.getBoundingClientRect().width / 2,
       this.canvas.getBoundingClientRect().height / 2
     )
+    this.canvasLayer.position = center
+    this.topLayer.position = center
   }
 
   onBtnClickCb = (detail) => {
@@ -294,25 +349,7 @@ class App {
       const result = this.data[action](args)
       this.onBtnClickCb({ action, result, data: this.data.toString() })
     }
-    this.drawBoxes()
-  }
-
-  getTargetValues = (target) => {
-    let args = []
-    const inputs = Array.from(target.closest('li').querySelectorAll('input'))
-    inputs.forEach((input) => {
-      args.push(input.value || this.randomNumber())
-    })
-    return args.join(',')
-  }
-
-  onSubmitDebug = (e) => {
-    e.preventDefault()
-    const debugVal = this.valueInput.value ? this.valueInput.value.split(',') : []
-    this.data = new this.dataType.className()
-    const defaultAction = this.dataType.actions[0]
-    debugVal.forEach((value) => this.data[defaultAction](value))
-    this.drawBoxes()
+    this.visualize()
   }
 
   onRandomBtnClick = (e) => {
@@ -321,12 +358,37 @@ class App {
     this.valueInput.value = randomNums.join()
   }
 
-  onSelectChange = (e) => {
+  onSubmitDebug = (e) => {
     e.preventDefault()
-    this.clearButtons()
+    const debugVal = this.valueInput.value ? this.valueInput.value.split(',') : []
+    const selected = structureTypes[this.select.getSelected()]
+    const defaultAction = selected.actions[0]
+    this.data = new selected['className']
+
+    // Go through data one at a time...
+    debugVal.forEach(value => this.data[defaultAction](parseInt(value)))
+
+    // draw
+    this.visualize()
+  }
+
+  onSelectChange = (e, selected) => {
+    const selectedType = structureTypes[selected]
+    this.data = new selectedType['className']
+
+    this.clearCanvas()
+    this.clearTextarea()
     this.clearConsole()
-    this.setDataType(e.target.value)
-    this.drawActionButtons()
+    this.drawActionButtons(selectedType)
+  }
+
+  clearCanvas = () => {
+    this.topLayer.removeChildren()
+    this.canvasLayer.removeChildren()
+  }
+
+  clearTextarea = () => {
+    this.valueInput.value = ''
   }
 
   clearConsole = () => {

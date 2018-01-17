@@ -1,19 +1,18 @@
+const Node = function(key) {
+  this.key = key
+  this.left = null
+  this.right = null
+}
+
 export default class BinarySearchTree {
 
   root = null
 
-  Node = (key) => {
-    this.key = key
-    this.left = null
-    this.right = null
-  }
-
   insert = (key) => {
-
-    var newNode = new Node(key)
+    const newNode = new Node(key)
 
     //special case - first element
-    if (root === null){
+    if (this.root === null) {
       this.root = newNode
     } else {
       this.insertNode(this.root, newNode)
@@ -21,13 +20,20 @@ export default class BinarySearchTree {
   }
 
   insertNode = (node, newNode) => {
+    console.log('---')
+    console.log('node', node.key)
+    console.log('newNode', newNode.key)
     if (newNode.key < node.key) {
+      console.log('newNode < node')
+      console.log('left')
       if (node.left === null) {
         node.left = newNode
       } else {
         this.insertNode(node.left, newNode)
       }
     } else {
+      console.log('newNode > node')
+      console.log('right')
       if (node.right === null) {
         node.right = newNode
       } else {
@@ -38,6 +44,32 @@ export default class BinarySearchTree {
 
   getRoot = () => {
     return this.root
+  }
+
+  getDepth = () => {
+    const fringe = [{ node: this.root, depth: 1 }]
+    let current = fringe.pop()
+    let max = 0
+
+    while (current && current.node) {
+      const { left = null, right = null } = current.node
+
+      // Find all children of this node
+      if (left) {
+        fringe.push({ node: left, depth: current.depth + 1 })
+      }
+      if (right) {
+        fringe.push({ node: right, depth: current.depth + 1 })
+      }
+
+      if (current.depth > max) {
+        max = current.depth
+      }
+
+      current = fringe.pop()
+    }
+
+    return max
   }
 
   search = (key) => {
@@ -95,12 +127,18 @@ export default class BinarySearchTree {
     }
   }
 
+  toString = () => {
+    const vals = []
+    this.inOrderTraverse(val => vals.push(val))
+    return vals
+  }
+
   min = () => {
     return this.minNode(this.root)
   }
 
   minNode = (node) => {
-    if (node){
+    if (node) {
       while (node && node.left !== null) {
         node = node.left
       }
@@ -114,7 +152,7 @@ export default class BinarySearchTree {
   }
 
   maxNode = (node) => {
-    if (node){
+    if (node) {
       while (node && node.right !== null) {
         node = node.right
       }

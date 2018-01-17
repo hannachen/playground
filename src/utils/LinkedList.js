@@ -89,7 +89,7 @@ const LinkedList = (() => {
             index = 0
 
         //removing first item
-        if (position === 0) {
+        if (parseInt(position) === 0) {
           head.set(this, current.next)
         } else {
 
