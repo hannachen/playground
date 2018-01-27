@@ -48,6 +48,7 @@ const structureTypes = {
       'print'
     ]
   },
+  /*
   dblLinkList: {
     label: 'Doubly Linked List',
     actions: []
@@ -60,6 +61,7 @@ const structureTypes = {
     label: 'Dictionary',
     actions: []
   },
+  */
   tree: {
     label: 'Binary Search Tree',
     className: BinarySearchTree,

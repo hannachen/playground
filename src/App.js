@@ -232,9 +232,8 @@ class App {
     const verticalPos = this.boxSize + this.offset
     const nodeCenter = position || new Paper.Point(canvasCenterH, verticalPos)
 
-    // draw circle
     if (node) {
-
+      // draw circle
       const nodeCircle = new Paper.Path.Circle(nodeCenter, this.boxSize/2)
       nodeCircle.fillColor = 'black'
       nodeCircle.strokeColor = 'white'
@@ -242,7 +241,7 @@ class App {
       const text = new Paper.PointText(nodeCenter)
       text.fillColor = 'white'
       text.fontWeight = 800
-      text.content = `${node.key}`
+      text.content = `${node.key}-${level}`
       text.position = new Paper.Point(nodeCenter)
     }
     if (node.left || node.right) {
@@ -270,14 +269,15 @@ class App {
     }
   }
 
-  calculateLineEndPosition = ({ from, direction = 'left', length = 50, level = 1, maxDepth = 1 }) => {
+  calculateLineEndPosition = ({ from, direction = 'left', length = 40, level = 1, maxDepth = 1 }) => {
     const diff = maxDepth - level
     const ratio = level / maxDepth
-    const amount =  25 + ((20 * ratio) * diff)
+    const amount =  25 + ((15 * ratio) * diff)
     const offset = direction === 'left' ? ~amount + 1 : amount
     const angle = 90 + offset
-    const x = Math.cos(angle*Math.PI/180) * length + from.x
-    const y = Math.sin(angle*Math.PI/180) * length + from.y
+    const lengthOffset = level * 5
+    const x = Math.cos(angle*Math.PI/180) * (length + lengthOffset) + from.x
+    const y = Math.sin(angle*Math.PI/180) * (length + lengthOffset) + from.y
 
     return new Paper.Point(x, y)
   }
